@@ -3,6 +3,7 @@ const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const saltRounds = 10;
+const crypto = require('crypto');
 
 const createUserService = async (name, email, password) => {
   try {
@@ -27,6 +28,50 @@ const createUserService = async (name, email, password) => {
   } catch (error) {
     console.log(error);
     return null;
+  }
+}
+
+const generateResetToken = async (email) => {
+  try {
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return { EC: 1, EM: 'Email không tồn tại' };
+    }
+
+    const token = crypto.randomBytes(20).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    // In production, send email with the token link. For dev we return token so frontend can show it or for testing.
+    return { EC: 0, EM: 'OK', data: { resetToken: token } };
+  } catch (error) {
+    console.log(error);
+    return { EC: 1, EM: 'Lỗi hệ thống' };
+  }
+}
+
+const resetPassword = async (token, newPassword) => {
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return { EC: 1, EM: 'Token không hợp lệ hoặc đã hết hạn' };
+    }
+
+    const hashPassword = await bcrypt.hash(newPassword, saltRounds);
+    user.password = hashPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    return { EC: 0, EM: 'Đặt lại mật khẩu thành công' };
+  } catch (error) {
+    console.log(error);
+    return { EC: 1, EM: 'Lỗi hệ thống' };
   }
 }
 
@@ -86,5 +131,6 @@ const getUserService = async () => {
 }
 
 module.exports = {
-  createUserService, loginService, getUserService
+  createUserService, loginService, getUserService,
+  generateResetToken, resetPassword
 }
