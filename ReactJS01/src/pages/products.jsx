@@ -7,13 +7,14 @@ const ProductsPage = () => {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(12);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const loaderRef = useRef();
 
-  const fetch = async (p = 1) => {
+  const fetch = async (p = 1, category = null) => {
     setLoading(true);
-    const res = await getProductsApi(p, limit);
+    const res = await getProductsApi(p, limit, category);
     if (res && res.EC === 0) {
       const data = res.data || [];
       setItems(prev => p === 1 ? data : [...prev, ...data]);
@@ -24,8 +25,12 @@ const ProductsPage = () => {
   }
 
   useEffect(() => {
-    fetch(1);
-  }, []);
+    // initial load or when category changes
+    setPage(1);
+    setItems([]);
+    setHasMore(true);
+    fetch(1, selectedCategory);
+  }, [selectedCategory]);
 
   useEffect(() => {
     if (!loaderRef.current) return;
@@ -33,12 +38,12 @@ const ProductsPage = () => {
       if (entries[0].isIntersecting && hasMore && !loading) {
         const next = page + 1;
         setPage(next);
-        fetch(next);
+        fetch(next, selectedCategory);
       }
     }, { rootMargin: '300px' });
     observer.observe(loaderRef.current);
     return () => observer.disconnect();
-  }, [loaderRef.current, hasMore, loading, page]);
+  }, [loaderRef.current, hasMore, loading, page, selectedCategory]);
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -89,6 +94,34 @@ const ProductsPage = () => {
           }}>
             Khám phá hơn {items.length}+ sản phẩm chất lượng cao
           </p>
+        </div>
+
+        {/* Category Filters */}
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          {['electronics', 'clothes', 'beauty', 'books'].map(cat => (
+            <Tag
+              key={cat}
+              color={getCategoryColor(cat)}
+              style={{
+                margin: '0 8px 8px 0',
+                cursor: 'pointer',
+                opacity: selectedCategory && selectedCategory !== cat ? 0.6 : 1,
+                border: selectedCategory === cat ? '2px solid rgba(255,255,255,0.08)' : 'none'
+              }}
+              onClick={() => {
+                setSelectedCategory(prev => prev === cat ? null : cat);
+              }}
+            >
+              {getCategoryLabel(cat)}
+            </Tag>
+          ))}
+          <Button
+            onClick={() => setSelectedCategory(null)}
+            style={{ marginLeft: 12 }}
+            size="small"
+          >
+            Tất cả
+          </Button>
         </div>
 
         {/* Products Grid */}
