@@ -14,20 +14,21 @@ const LoginPage = () => {
     const res = await loginApi(email, password);
 
     if (res && res.EC === 0) {
-      localStorage.setItem('access_token', res.access_token)
-      notification.success({
-        message: "LOGIN USER",
-        description: "Success"
-      });
-      setAuth({
-        isAuthenticated: true,
-        user: {
-          email: res.user.email ?? "",
-          name: res.user.name ?? ""
-        }
-      });
-      navigate("/");
-    } else {
+        localStorage.setItem('access_token', res.access_token)
+        notification.success({
+          message: "LOGIN USER",
+          description: "Success"
+        });
+        setAuth({
+          isAuthenticated: true,
+          user: {
+            email: res.user.email ?? "",
+            name: res.user.name ?? "",
+            role: res.user.role ?? 'user'
+          }
+        });
+        navigate("/");
+      } else {
       notification.error({
         message: "LOGIN USER",
         description: res?.EM ?? "error"
@@ -55,10 +56,8 @@ const LoginPage = () => {
               label="Email"
               name="email"
               rules={[
-                {
-                  required: true,
-                  message: 'Please input your email!',
-                },
+                { required: true, message: 'Please input your email!' },
+                { type: 'email', message: 'Email không hợp lệ' }
               ]}
             >
               <Input />

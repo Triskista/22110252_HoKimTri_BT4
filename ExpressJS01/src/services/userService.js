@@ -75,6 +75,24 @@ const resetPassword = async (token, newPassword) => {
   }
 }
 
+const seedDefaultAdmin = async () => {
+  try {
+    const adminExists = await User.findOne({ email: 'admin@example.com' });
+    if (adminExists) return;
+
+    const hashPassword = await bcrypt.hash('admin123', saltRounds);
+    await User.create({
+      name: 'Admin User',
+      email: 'xample.com',
+      password: hashPassword,
+      role: 'admin'
+    });
+    console.log('Seeded default admin user: admin@example.com / admin123');
+  } catch (error) {
+    console.log('Error seeding admin:', error);
+  }
+}
+
 const loginService = async (email, password) => {
   try {
     //fetch user by email
@@ -87,6 +105,7 @@ const loginService = async (email, password) => {
         const payload = {
           email: user.email,
           name: user.name,
+          role: user.role || 'user',
         }
 
         const access_token = jwt.sign(
@@ -103,6 +122,7 @@ const loginService = async (email, password) => {
           user: {
             email: user.email,
             name: user.name
+            , role: user.role || 'user'
           }
         };
       }
@@ -132,5 +152,5 @@ const getUserService = async () => {
 
 module.exports = {
   createUserService, loginService, getUserService,
-  generateResetToken, resetPassword
+  generateResetToken, resetPassword, seedDefaultAdmin
 }

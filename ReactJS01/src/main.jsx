@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './styles/global.css'
+import { ConfigProvider, theme } from 'antd'
 
 import {
   createBrowserRouter,
@@ -13,6 +14,8 @@ import HomePage from './pages/home.jsx';
 import LoginPage from './pages/login.jsx';
 import ForgotPassword from './pages/forgotPassword.jsx';
 import ResetPassword from './pages/resetPassword.jsx';
+import ProductsPage from './pages/products.jsx';
+import AdminPage from './pages/admin.jsx';
 import { AuthWrapper } from './components/context/auth.context.jsx';
 
 const router = createBrowserRouter([
@@ -23,6 +26,14 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />
+      },
+      {
+        path: 'products',
+        element: <ProductsPage />
+      },
+      {
+        path: 'admin',
+        element: <AdminPage />
       },
       {
         path: "user",
@@ -50,8 +61,21 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AuthWrapper>
-      <RouterProvider router={router} />
-    </AuthWrapper>
+    <ConfigProvider
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: {
+          colorPrimary: '#0ea5e9',
+          colorBgBase: '#0f172a',
+          colorBorder: '#1e293b',
+          colorText: '#e2e8f0',
+          borderRadius: 8,
+        },
+      }}
+    >
+      <AuthWrapper>
+        <RouterProvider router={router} />
+      </AuthWrapper>
+    </ConfigProvider>
   </React.StrictMode>,
 )

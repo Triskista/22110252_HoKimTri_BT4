@@ -28,6 +28,13 @@ app.use('/v1/api/', apiRoutes);
   try {
     //kết nối database using mongoose
     await connection();
+    // seed sample data for products if needed
+    try {
+      const { seedProducts } = require('./services/productService');
+      await seedProducts();
+    } catch (err) {
+      console.log('No product seeder available or seeding failed', err);
+    }
     //lắng nghe port trong env
     app.listen(port, () => {
       console.log(`Backend Node.js App listening on port ${port}`)

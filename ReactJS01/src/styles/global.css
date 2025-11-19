@@ -1,4 +1,385 @@
 * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #0ea5e9;
+  --primary-dark: #06b6d4;
+  --primary-light: #38bdf8;
+  --secondary: #f59e0b;
+  --success: #10b981;
+  --danger: #ef4444;
+  --bg-dark: #0f172a;
+  --bg-darker: #082f49;
+  --bg-card: #1e293b;
+  --bg-hover: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --border: #334155;
+  --border-light: #475569;
+}
+
+html, body {
+  background: linear-gradient(135deg, #0f172a 0%, #082f49 100%);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ==================== MENU & HEADER ==================== */
+.ant-menu {
+  background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.ant-menu-item, .ant-menu-submenu-title {
+  color: var(--text-secondary) !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-menu-item:hover {
+  color: var(--primary) !important;
+  background-color: rgba(14, 165, 233, 0.1) !important;
+}
+
+.ant-menu-item-selected {
+  color: var(--primary) !important;
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.2) 0%, transparent 100%) !important;
+  border-bottom-color: var(--primary) !important;
+}
+
+/* ==================== CARDS ==================== */
+.ant-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(14, 165, 233, 0.15) !important;
+  border-color: var(--primary) !important;
+}
+
+.ant-card-head {
+  border-bottom: 1px solid var(--border) !important;
+  background: rgba(14, 165, 233, 0.05) !important;
+}
+
+.ant-card-body {
+  color: var(--text-primary) !important;
+}
+
+/* ==================== TABLES ==================== */
+.ant-table {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+.ant-table-container {
+  background: var(--bg-card) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.ant-table-thead > tr > th {
+  background: linear-gradient(90deg, #334155 0%, #1e293b 100%) !important;
+  color: var(--primary-light) !important;
+  border-color: var(--border) !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.ant-table-tbody > tr > td {
+  border-color: var(--border-light) !important;
+  color: var(--text-secondary) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: rgba(14, 165, 233, 0.05) !important;
+}
+
+/* ==================== INPUTS ==================== */
+.ant-input, .ant-input-number, .ant-select-selector, .ant-input-textarea textarea {
+  background-color: #0f172a !important;
+  border: 1px solid var(--border-light) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-input:hover, .ant-input-number:hover, .ant-select-selector:hover, .ant-input-textarea:hover textarea {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1) !important;
+}
+
+.ant-input:focus, .ant-input-number:focus-within, .ant-input-textarea:focus-within {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+}
+
+.ant-input::placeholder {
+  color: #64748b;
+}
+
+.ant-input-textarea-show-count::after {
+  color: #94a3b8 !important;
+}
+
+/* ==================== SELECTS ==================== */
+.ant-select-item-option {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+.ant-select-item-option:hover {
+  background-color: rgba(14, 165, 233, 0.15) !important;
+}
+
+.ant-select-item-option-selected {
+  background-color: rgba(14, 165, 233, 0.25) !important;
+  color: var(--primary) !important;
+}
+
+/* ==================== MODALS ==================== */
+.ant-modal-content {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  color: var(--text-primary) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.ant-modal-header {
+  background: rgba(14, 165, 233, 0.05) !important;
+  border-color: var(--border) !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.ant-modal-title {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.ant-modal-close {
+  color: var(--text-secondary) !important;
+}
+
+.ant-modal-close:hover {
+  color: var(--primary) !important;
+}
+
+/* ==================== FORMS ==================== */
+.ant-form-item-label > label {
+  color: var(--text-primary) !important;
+  font-weight: 500;
+}
+
+.ant-form-item {
+  margin-bottom: 20px !important;
+}
+
+/* ==================== BUTTONS ==================== */
+.ant-btn {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.ant-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.ant-btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3) !important;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%) !important;
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+.ant-btn-default {
+  border: 1px solid var(--border-light) !important;
+  color: var(--text-secondary) !important;
+  background-color: transparent !important;
+}
+
+.ant-btn-default:hover {
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  background-color: rgba(14, 165, 233, 0.05) !important;
+}
+
+.ant-btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  border: none !important;
+}
+
+.ant-btn-danger:hover {
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3) !important;
+}
+
+.ant-btn-circle {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+}
+
+/* ==================== TOOLTIPS ==================== */
+.ant-tooltip-inner {
+  background-color: var(--bg-darker) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.ant-tooltip-arrow-content {
+  background-color: var(--bg-darker) !important;
+}
+
+/* ==================== NOTIFICATIONS ==================== */
+.ant-notification-notice {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.ant-notification-notice-message {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+.ant-notification-notice-description {
+  color: var(--text-secondary) !important;
+}
+
+/* ==================== FIELDSETS ==================== */
+fieldset {
+  border: 1px solid var(--border-light) !important;
+  border-radius: 12px !important;
+  background: rgba(30, 41, 59, 0.5) !important;
+  padding: 20px !important;
+  backdrop-filter: blur(10px);
+}
+
+legend {
+  color: var(--primary-light) !important;
+  font-weight: 600;
+  padding: 0 10px;
+}
+
+/* ==================== LINKS ==================== */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: var(--primary-light);
+  text-decoration: underline;
+}
+
+/* ==================== SPINNERS ==================== */
+.ant-spin {
+  color: var(--primary) !important;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(14, 165, 233, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.6);
+  }
+}
+
+.ant-card {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ==================== SCROLLBAR ==================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* ==================== EMPTY STATE ==================== */
+.ant-empty {
+  color: var(--text-secondary) !important;
+}
+
+.ant-empty-description {
+  color: var(--text-secondary) !important;
 }

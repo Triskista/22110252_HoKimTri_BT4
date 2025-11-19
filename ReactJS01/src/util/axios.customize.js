@@ -22,9 +22,9 @@ instance.interceptors.response.use(function (response) {
   if (response && response.data) return response.data;
   return response;
 }, function (error) {
-  // Any status codes that falls outside the range of 2xx cause this function to trigger
-  // Do something with response error
-  if (error?.response?.data) return error?.response?.data;
+  // Any status codes that fall outside the range of 2xx cause this function to trigger
+  // Forward the error to the caller so upstream code can handle it in try/catch
+  if (error?.response?.data) return Promise.reject(error.response.data);
   return Promise.reject(error);
 });
 
