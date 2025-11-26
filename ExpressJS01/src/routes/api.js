@@ -2,7 +2,7 @@ const express = require('express');
 const { createUser, handleLogin, getUser,
   getAccount, forgotPassword, resetPasswordController
 } = require('../controllers/userController');
-const { getProductsController, createProductController, updateProductController, deleteProductController } = require('../controllers/productController');
+const { getProductsController, createProductController, updateProductController, deleteProductController, searchProductsController, filterProductsController, getCategoriesController, getPriceStatsController } = require('../controllers/productController');
 const auth = require('../middleware/auth');
 const delay = require('../middleware/delay');
 const createRateLimiter = require('../middleware/rateLimiter');
@@ -45,6 +45,12 @@ routerAPI.get("/", (req, res) => {
 
 // public product listing with pagination / lazy-load support
 routerAPI.get('/products', getProductsController);
+
+// advanced search and filter endpoints
+routerAPI.get('/search', searchProductsController);
+routerAPI.get('/filter', filterProductsController);
+routerAPI.get('/categories', getCategoriesController);
+routerAPI.get('/price-stats', getPriceStatsController);
 
 // protect following endpoints
 routerAPI.use(auth);
