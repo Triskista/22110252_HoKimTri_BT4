@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/Input.css';
+import './styles/Input.css';
 
 export const CartInput = ({
   type = 'text',
@@ -28,4 +28,3 @@ export const CartInput = ({
 };
 
 export default CartInput;
-

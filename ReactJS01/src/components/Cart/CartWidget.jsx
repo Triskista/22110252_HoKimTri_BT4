@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import '../styles/CartWidget.css';
-import CartItem from './CartItem.jsx';
-import CartButton from './CartButton.jsx';
-import CartModal from './CartModal.jsx';
-import { useCart } from '../hooks/useCart';
+import './styles/CartWidget.css';
+import CartItem from './CartItem';
+import CartButton from './CartButton';
+import CartModal from './CartModal';
+import { useCart } from '../../hooks/useCart';
 
 export const CartWidget = ({ onCheckout }) => {
   const { cart, selectedItems, removeItem, updateItem, selectItem, selectAll, getSelectedTotal } = useCart();
@@ -84,4 +84,3 @@ export const CartWidget = ({ onCheckout }) => {
 };
 
 export default CartWidget;
-

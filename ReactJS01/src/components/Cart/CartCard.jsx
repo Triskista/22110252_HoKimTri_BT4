@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/Card.css';
+import './styles/Card.css';
 
 export const CartCard = ({
   children,
@@ -37,4 +37,3 @@ export const CartCard = ({
 };
 
 export default CartCard;
-

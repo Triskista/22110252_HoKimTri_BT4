@@ -6,6 +6,10 @@ const apiRoutes = require('./routes/api');
 const connection = require('./config/database');
 const { getHomepage } = require('./controllers/homeController');
 const cors = require('cors');
+const { ApolloServer } = require('apollo-server-express');
+const { cartTypeDefs } = require('./graphql/cartTypeDefs');
+const { cartResolvers } = require('./graphql/cartResolvers');
+
 const app = express(); //cấu hình app là express
 
 //configure port, nếu tìm thấy port trong env, không thì trả về 8888
@@ -24,22 +28,40 @@ app.use('/', webAPI);
 //khai báo route cho API
 app.use('/v1/api/', apiRoutes);
 
-(async () => {
-  try {
-    //kết nối database using mongoose
-    await connection();
-    // seed sample data for products if needed
+// Initialize Apollo Server for GraphQL
+const startServer = async () => {
+  const server = new ApolloServer({
+    typeDefs: cartTypeDefs,
+    resolvers: cartResolvers,
+    introspection: true,
+  });
+
+  await server.start();
+  server.applyMiddleware({ app });
+
+  (async () => {
     try {
-      const { seedProducts } = require('./services/productService');
-      await seedProducts();
-    } catch (err) {
-      console.log('No product seeder available or seeding failed', err);
+      //kết nối database using mongoose
+      await connection();
+      // seed sample data for products if needed
+      try {
+        const { seedProducts } = require('./services/productService');
+        await seedProducts();
+      } catch (err) {
+        console.log('No product seeder available or seeding failed', err);
+      }
+      //lắng nghe port trong env
+      app.listen(port, () => {
+        console.log(`Backend Node.js App listening on port ${port}`)
+        console.log(`GraphQL Playground available at http://localhost:${port}${server.graphqlPath}`)
+      })
+    } catch (error) {
+      console.log(">>> Error connect to DB: ", error)
     }
-    //lắng nghe port trong env
-    app.listen(port, () => {
-      console.log(`Backend Node.js App listening on port ${port}`)
-    })
-  } catch (error) {
-    console.log(">>> Error connect to DB: ", error)
-  }
-})()
+  })()
+};
+
+startServer().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+});

@@ -1,12 +1,15 @@
 {
-  "name": "@hokimtri/shopping-cart-lib",
+  "name": "kimtri-shoppingcart-lib",
   "version": "1.0.0",
+  "type": "module",
   "description": "A standardized shopping cart library with UI components, add/edit/delete functionality",
   "main": "dist/index.js",
-  "module": "dist/index.esm.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "publishConfig": {
     "access": "public",

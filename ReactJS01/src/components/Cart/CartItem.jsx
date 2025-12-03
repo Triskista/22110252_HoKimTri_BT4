@@ -1,7 +1,7 @@
 import React from 'react';
-import '../styles/CartItem.css';
-import CartButton from './CartButton.jsx';
-import CartInput from './CartInput.jsx';
+import './styles/CartItem.css';
+import CartButton from './CartButton';
+import CartInput from './CartInput';
 
 export const CartItem = ({
   item,
@@ -70,4 +70,3 @@ export const CartItem = ({
 };
 
 export default CartItem;
-

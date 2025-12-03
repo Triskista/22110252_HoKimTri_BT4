@@ -1,16 +1,16 @@
 // Components
-export { CartButton } from './components/CartButton';
-export { CartInput } from './components/CartInput';
-export { CartModal } from './components/CartModal';
-export { CartCard } from './components/CartCard';
-export { CartItem } from './components/CartItem';
-export { CartWidget } from './components/CartWidget';
+export { CartButton } from './components/CartButton.jsx';
+export { CartInput } from './components/CartInput.jsx';
+export { CartModal } from './components/CartModal.jsx';
+export { CartCard } from './components/CartCard.jsx';
+export { CartItem } from './components/CartItem.jsx';
+export { CartWidget } from './components/CartWidget.jsx';
 
 // Context & Provider
-export { CartProvider, CartContext } from './context/CartContext';
+export { CartProvider, CartContext } from './context/CartContext.jsx';
 
 // Hooks
-export { useCart } from './hooks/useCart';
+export { useCart } from './hooks/useCart.js';
 
 // Styles
 import './styles/Button.css';

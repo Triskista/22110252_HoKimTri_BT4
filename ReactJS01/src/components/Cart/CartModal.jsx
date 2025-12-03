@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import '../styles/Modal.css';
-import CartButton from './CartButton.jsx';
+import './styles/Modal.css';
+import CartButton from './CartButton';
 
 export const CartModal = ({
   isOpen,
@@ -43,4 +43,3 @@ export const CartModal = ({
 };
 
 export default CartModal;
-

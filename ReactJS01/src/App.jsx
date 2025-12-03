@@ -3,6 +3,8 @@ import Header from './components/layout/header';
 import axios from './util/axios.customize';
 import { useContext, useEffect } from 'react';
 import { AuthContext } from './components/context/auth.context';
+import { CartProvider } from './context/cart.context';
+import CartWidget from './components/Cart/CartWidget';
 import { Spin } from 'antd';
 
 function App() {
@@ -51,7 +53,7 @@ function App() {
   }, [setAuth, setAppLoading])
 
   return (
-    <>
+    <CartProvider>
       {appLoading === true ?
         <div style={{
           position: "fixed",
@@ -65,9 +67,10 @@ function App() {
         <>
           <Header />
           <Outlet />
+          <CartWidget onCheckout={() => alert('Order placed successfully!')} />
         </>
       }
-    </>
+    </CartProvider>
   )
 }
 

@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { Card, Col, Row, Spin, Button, Tag, Empty } from 'antd';
 import { ShoppingCartOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import { getProductsApi, searchProductsApi } from '../util/api';
 import SearchFilters from '../components/SearchFilters';
 import { calculateDiscountedPrice } from '../util/search';
+import { useCart } from '../hooks/useCart';
 
 const ProductsPage = () => {
+  const { addItem } = useCart();
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(12);
@@ -120,6 +122,18 @@ const ProductsPage = () => {
     setItems([]);
     setHasMore(true);
     fetch(1, null);
+  }
+
+  const handleAddToCart = (item) => {
+    const discountedPrice = item.discount ? calculateDiscountedPrice(item.price, item.discount) : item.price;
+    addItem({
+      id: item._id,
+      name: item.title,
+      description: item.description,
+      price: discountedPrice,
+      image: item.image,
+      quantity: 1
+    });
   }
 
   return (
@@ -374,6 +388,7 @@ const ProductsPage = () => {
                         icon={<ShoppingCartOutlined />}
                         size="small"
                         style={{ fontSize: 14 }}
+                        onClick={() => handleAddToCart(item)}
                       />
                     </div>
                   </Card>

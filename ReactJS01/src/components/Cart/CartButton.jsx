@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/Button.css';
+import './styles/Button.css';
 
 export const CartButton = ({
   children,
@@ -23,4 +23,3 @@ export const CartButton = ({
 };
 
 export default CartButton;
-

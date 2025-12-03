@@ -28,6 +28,7 @@ export default {
       babelHelpers: 'bundled',
       presets: ['@babel/preset-react', '@babel/preset-env'],
       exclude: 'node_modules/**',
+      extensions: ['.js', '.jsx'],
     }),
     css({ output: 'dist/styles.css' }),
     terser(),
