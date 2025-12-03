@@ -1,6 +1,7 @@
 {
   "name": "shopping-cart-server",
   "version": "1.0.0",
+  "type": "module",
   "description": "GraphQL API for Shopping Cart with advanced features",
   "main": "src/index.js",
   "scripts": {
@@ -27,3 +28,4 @@
     "jest": "^29.5.0"
   }
 }
+
