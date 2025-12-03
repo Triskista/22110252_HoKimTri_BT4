@@ -1,0 +1,10 @@
+src/
+.rollup.cache/
+rollup.config.js
+.gitignore
+*.md
+.env
+.env.local
+coverage/
+__tests__
+test

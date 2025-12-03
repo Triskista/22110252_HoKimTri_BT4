@@ -1,0 +1,66 @@
+.cart-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.cart-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cart-btn--primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.cart-btn--primary:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.cart-btn--secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cart-btn--secondary:hover:not(:disabled) {
+  background-color: #545b62;
+}
+
+.cart-btn--danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.cart-btn--danger:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.cart-btn--success {
+  background-color: #28a745;
+  color: white;
+}
+
+.cart-btn--success:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.cart-btn--small {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.cart-btn--medium {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.cart-btn--large {
+  padding: 12px 24px;
+  font-size: 16px;
+}
