@@ -1,14 +1,19 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
-import { Card, Col, Row, Spin, Button, Tag, Empty } from 'antd';
-import { ShoppingCartOutlined, ArrowDownOutlined } from '@ant-design/icons';
-import { getProductsApi, searchProductsApi } from '../util/api';
+﻿import React, { useContext, useEffect, useRef, useState } from 'react';
+import { Card, Col, Row, Spin, Button, Tag, Empty, message } from 'antd';
+import { ShoppingCartOutlined, ArrowDownOutlined, HeartOutlined, HeartFilled } from '@ant-design/icons';
+import { getProductsApi, searchProductsApi, addItemToCartApi, toggleFavoriteApi, getFavoritesApi } from '../util/api';
 import SearchFilters from '../components/SearchFilters';
 import { calculateDiscountedPrice } from '../util/search';
 import { useCart } from '../hooks/useCart';
+import { AuthContext } from '../components/context/auth.context';
+import { useNavigate } from 'react-router-dom';
 
 const ProductsPage = () => {
   const { addItem } = useCart();
+  const { auth } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(12);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -32,6 +37,47 @@ const ProductsPage = () => {
     }
     setLoading(false);
   }
+
+  // Load danh sách yêu thích để tô đậm icon sau reload
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!auth?.user?.email) {
+        setFavoriteIds([]);
+        return;
+      }
+      try {
+        const res = await getFavoritesApi();
+        if (res?.EC === 0 && Array.isArray(res.data)) {
+          const ids = res.data.map((p) => p._id);
+          setFavoriteIds(ids);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    loadFavorites();
+  }, [auth?.user?.email]);
+
+  const handleToggleFavorite = async (productId) => {
+    if (!auth?.user?.email) {
+      message.warning('Vui lòng đăng nhập để sử dụng chức năng yêu thích');
+      return;
+    }
+    try {
+      const res = await toggleFavoriteApi(productId);
+      if (res?.EC === 0 && res?.data?.isFavorite !== undefined) {
+        setFavoriteIds((prev) =>
+          res.data.isFavorite
+            ? [...prev, productId]
+            : prev.filter((id) => id !== productId)
+        );
+      }
+    } catch (e) {
+      console.error('toggleFavorite error', e);
+      message.error('Không thể cập nhật yêu thích');
+    }
+  };
 
   const fetchSearch = async (query, filters, p = 1) => {
     setLoading(true);
@@ -124,7 +170,7 @@ const ProductsPage = () => {
     fetch(1, null);
   }
 
-  const handleAddToCart = (item) => {
+  const handleAddToCart = async (item) => {
     const discountedPrice = item.discount ? calculateDiscountedPrice(item.price, item.discount) : item.price;
     addItem({
       id: item._id,
@@ -134,6 +180,15 @@ const ProductsPage = () => {
       image: item.image,
       quantity: 1
     });
+
+    // Gửi request lên backend để lưu vào table cart (MongoDB)
+    if (auth?.user?.email) {
+      try {
+        await addItemToCartApi(auth.user.email, item._id, 1);
+      } catch (error) {
+        console.error('Failed to sync cart to backend:', error);
+      }
+    }
   }
 
   return (
@@ -300,21 +355,27 @@ const ProductsPage = () => {
                         )}
                       </div>
                     }
-                    bodyStyle={{
-                      padding: '16px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      flex: 1
+                    styles={{
+                      body: {
+                        padding: '16px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        flex: 1,
+                      },
                     }}
                   >
-                    <h4 style={{
+                    <h4
+                      style={{
                       fontSize: 15,
                       fontWeight: 600,
                       color: '#f1f5f9',
                       marginBottom: 8,
                       lineHeight: 1.3,
-                      minHeight: 40
-                    }}>
+                      minHeight: 40,
+                      cursor: 'pointer',
+                    }}
+                      onClick={() => navigate(`/products/${item._id}`)}
+                    >
                       {item.title}
                     </h4>
 
@@ -329,8 +390,8 @@ const ProductsPage = () => {
                       {item.description}
                     </p>
 
-                    {/* Rating & Views */}
-                    {(item.rating > 0 || item.views > 0) && (
+                    {/* Rating, Views, Buyers, Comments */}
+                    {(item.rating > 0 || item.views > 0 || item.buyerCount > 0 || item.commentCount > 0) && (
                       <div style={{
                         display: 'flex',
                         gap: 12,
@@ -340,6 +401,10 @@ const ProductsPage = () => {
                       }}>
                         {item.rating > 0 && <span>⭐ {item.rating}/5</span>}
                         {item.views > 0 && <span>👁️ {item.views} lượt xem</span>}
+                        {item.buyerCount > 0 && <span>🛍️ {item.buyerCount} khách mua</span>}
+                        {item.commentCount > 0 && (
+                          <span>💬 {item.commentCount} bình luận</span>
+                        )}
                       </div>
                     )}
 
@@ -348,7 +413,8 @@ const ProductsPage = () => {
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       paddingTop: 12,
-                      borderTop: '1px solid rgba(51, 65, 85, 0.5)'
+                      borderTop: '1px solid rgba(51, 65, 85, 0.5)',
+                      marginBottom: 8
                     }}>
                       <div>
                         {item.discount > 0 ? (
@@ -382,15 +448,24 @@ const ProductsPage = () => {
                           </span>
                         )}
                       </div>
-                      <Button
-                        type="primary"
-                        shape="circle"
-                        icon={<ShoppingCartOutlined />}
-                        size="small"
-                        style={{ fontSize: 14 }}
-                        onClick={() => handleAddToCart(item)}
-                      />
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={favoriteIds.includes(item._id) ? <HeartFilled style={{ color: '#f97316' }} /> : <HeartOutlined />}
+                          onClick={() => handleToggleFavorite(item._id)}
+                        />
+                        <Button
+                          type="primary"
+                          shape="circle"
+                          icon={<ShoppingCartOutlined />}
+                          size="small"
+                          style={{ fontSize: 14 }}
+                          onClick={() => handleAddToCart(item)}
+                        />
+                      </div>
                     </div>
+
                   </Card>
                 </Col>
               );

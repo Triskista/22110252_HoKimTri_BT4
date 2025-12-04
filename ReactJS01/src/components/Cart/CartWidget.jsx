@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import './styles/CartWidget.css';
 import CartItem from './CartItem';
 import CartButton from './CartButton';
 import CartModal from './CartModal';
 import { useCart } from '../../hooks/useCart';
+import { AuthContext } from '../context/auth.context';
+import { removeFromCartApi, clearCartApi } from '../../util/api';
 
 export const CartWidget = ({ onCheckout }) => {
-  const { cart, selectedItems, removeItem, updateItem, selectItem, selectAll, getSelectedTotal } = useCart();
+  const { cart, selectedItems, removeItem, updateItem, selectItem, selectAll, getSelectedTotal, clearCart } = useCart();
+  const { auth } = useContext(AuthContext);
   const [showModal, setShowModal] = useState(false);
 
   const selectedCount = selectedItems.length;
@@ -16,11 +19,33 @@ export const CartWidget = ({ onCheckout }) => {
     selectAll(e.target.checked);
   };
 
-  const handleCheckout = () => {
+  const handleRemove = async (itemId) => {
+    removeItem(itemId);
+    if (auth?.user?.email) {
+      try {
+        await removeFromCartApi(auth.user.email, itemId);
+      } catch (e) {
+        console.error('Failed to remove item from backend cart', e);
+      }
+    }
+  };
+
+  const handleCheckout = async () => {
     if (selectedCount === 0) {
       alert('Please select items to checkout');
       return;
     }
+
+    // Clear toàn bộ giỏ hàng trong backend để khi reload không còn sản phẩm
+    if (auth?.user?.email) {
+      try {
+        await clearCartApi(auth.user.email);
+      } catch (e) {
+        console.error('Failed to clear backend cart', e);
+      }
+    }
+
+    clearCart();
     onCheckout && onCheckout();
     setShowModal(false);
   };
@@ -49,7 +74,6 @@ export const CartWidget = ({ onCheckout }) => {
                   <input
                     type="checkbox"
                     checked={selectedCount === totalItems && totalItems > 0}
-                    indeterminate={selectedCount > 0 && selectedCount < totalItems}
                     onChange={handleSelectAll}
                   />
                   Select All ({selectedCount}/{totalItems})
@@ -63,7 +87,7 @@ export const CartWidget = ({ onCheckout }) => {
                     item={item}
                     isSelected={selectedItems.includes(item.id)}
                     onUpdateQuantity={updateItem}
-                    onRemove={removeItem}
+                    onRemove={handleRemove}
                     onSelect={selectItem}
                   />
                 ))}

@@ -77,6 +77,116 @@ const getPriceStatsApi = () => {
   return axios.get('/v1/api/price-stats');
 }
 
+const getProductDetailApi = (id) => {
+  return axios.get(`/v1/api/products/${id}`);
+};
+
+// Lưu item vào giỏ hàng (GraphQL)
+const addItemToCartApi = (userId, productId, quantity = 1) => {
+  return axios.post('/graphql', {
+    query: `
+      mutation AddItemToCart($userId: ID!, $input: AddItemInput!) {
+        addItemToCart(userId: $userId, input: $input) {
+          success
+          message
+          data {
+            id
+            userId
+            selectedItems
+            items {
+              id
+              productId
+              quantity
+              price
+            }
+          }
+        }
+      }
+    `,
+    variables: {
+      userId,
+      input: {
+        productId,
+        quantity,
+      },
+    },
+  });
+};
+
+// Lấy giỏ hàng từ backend (GraphQL)
+const getCartApi = (userId) => {
+  return axios.post('/graphql', {
+    query: `
+      query GetCart($userId: ID!) {
+        getCart(userId: $userId) {
+          success
+          message
+          data {
+            id
+            userId
+            selectedItems
+            items {
+              id
+              productId
+              quantity
+              price
+            }
+          }
+        }
+      }
+    `,
+    variables: { userId },
+  });
+};
+
+// Xóa 1 item khỏi giỏ hàng (GraphQL)
+const removeFromCartApi = (userId, itemId) => {
+  return axios.post('/graphql', {
+    query: `
+      mutation RemoveFromCart($userId: ID!, $itemId: ID!) {
+        removeFromCart(userId: $userId, itemId: $itemId) {
+          success
+          message
+        }
+      }
+    `,
+    variables: { userId, itemId },
+  });
+};
+
+// Clear toàn bộ giỏ hàng (GraphQL)
+const clearCartApi = (userId) => {
+  return axios.post('/graphql', {
+    query: `
+      mutation ClearCart($userId: ID!) {
+        clearCart(userId: $userId) {
+          success
+          message
+        }
+      }
+    `,
+    variables: { userId },
+  });
+};
+
+// Favorites
+const toggleFavoriteApi = (productId) => {
+  return axios.post(`/v1/api/favorites/${productId}`);
+};
+
+const getFavoritesApi = () => {
+  return axios.get('/v1/api/favorites');
+};
+
+// Comments
+const addCommentApi = (productId, content, rating) => {
+  return axios.post(`/v1/api/products/${productId}/comments`, { content, rating });
+};
+
+const getCommentsApi = (productId) => {
+  return axios.get(`/v1/api/products/${productId}/comments`);
+};
+
 const createProductApi = (title, description, price, category, image, discount = 0, tags = []) => {
   return axios.post('/v1/api/products', { title, description, price, category, image, discount, tags });
 }
@@ -103,5 +213,8 @@ export {
   createUserApi, loginApi, getAllUserApi,
   forgotPasswordApi, resetPasswordApi,
   getProductsApi, searchProductsApi, filterProductsApi, getCategoriesApi, getPriceStatsApi,
-  createProductApi, updateProductApi, deleteProductApi
+  createProductApi, updateProductApi, deleteProductApi,
+  addItemToCartApi, getCartApi, removeFromCartApi, clearCartApi,
+  toggleFavoriteApi, getFavoritesApi, addCommentApi, getCommentsApi,
+  getProductDetailApi,
 }

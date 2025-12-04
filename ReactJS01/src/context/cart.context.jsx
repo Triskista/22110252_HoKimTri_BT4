@@ -1,4 +1,6 @@
-import React, { createContext, useReducer, useCallback } from 'react';
+import React, { createContext, useReducer, useCallback, useContext, useEffect } from 'react';
+import { getCartApi, getProductsApi } from '../util/api';
+import { AuthContext } from '../components/context/auth.context';
 
 export const CartContext = createContext();
 
@@ -10,6 +12,14 @@ const initialState = {
 
 const cartReducer = (state, action) => {
   switch (action.type) {
+    case 'SET_CART': {
+      return {
+        ...state,
+        items: action.payload.items || [],
+        selectedItems: action.payload.selectedItems || [],
+      };
+    }
+
     case 'ADD_ITEM': {
       const existingItem = state.items.find(item => item.id === action.payload.id);
       if (existingItem) {
@@ -71,6 +81,59 @@ const cartReducer = (state, action) => {
 
 export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const { auth } = useContext(AuthContext);
+
+  // Khi user đã đăng nhập, load giỏ hàng từ backend để tránh mất khi reload
+  useEffect(() => {
+    const syncCartFromBackend = async () => {
+      if (!auth?.user?.email) return;
+
+      try {
+        const res = await getCartApi(auth.user.email);
+        const response = res?.data?.getCart || res?.getCart;
+        if (!response || !response.success || !response.data) return;
+
+        const serverCart = response.data;
+
+        // Lấy danh sách sản phẩm để map tên, mô tả, ảnh đúng với product
+        let productMap = {};
+        try {
+          const productsRes = await getProductsApi(1, 1000);
+          if (productsRes && productsRes.EC === 0 && Array.isArray(productsRes.data)) {
+            productMap = productsRes.data.reduce((acc, p) => {
+              acc[p._id] = p;
+              return acc;
+            }, {});
+          }
+        } catch (e) {
+          // nếu lỗi thì vẫn tiếp tục, chỉ mất phần tên đẹp
+        }
+
+        // Map data từ backend sang format frontend đang dùng
+        const items = (serverCart.items || []).map((item) => ({
+          id: item.id, // id của CartItem
+          productId: item.productId,
+          name: productMap[item.productId]?.title || `Sản phẩm ${item.productId?.slice(-6) || ''}`,
+          description: productMap[item.productId]?.description || '',
+          image: productMap[item.productId]?.image || '',
+          price: item.price,
+          quantity: item.quantity,
+        }));
+
+        dispatch({
+          type: 'SET_CART',
+          payload: {
+            items,
+            selectedItems: serverCart.selectedItems || [],
+          },
+        });
+      } catch (err) {
+        console.error('Failed to load cart from backend', err);
+      }
+    };
+
+    syncCartFromBackend();
+  }, [auth?.user?.email]);
 
   const addItem = useCallback((product) => {
     dispatch({ type: 'ADD_ITEM', payload: product });

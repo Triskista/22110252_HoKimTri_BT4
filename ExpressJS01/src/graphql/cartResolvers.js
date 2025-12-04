@@ -1,31 +1,56 @@
-// In-memory database for shopping carts
-const carts = new Map();
-const orders = [];
-
-// Get or create cart
-const getCart = (userId) => {
-  if (!carts.has(userId)) {
-    carts.set(userId, {
-      id: `cart-${userId}`,
-      userId,
-      items: [],
-      selectedItems: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-  }
-  return carts.get(userId);
-};
+import Cart from '../models/cart.js';
+import Product from '../models/product.js';
+import mongoose from 'mongoose';
 
 // Calculate total
 const calculateTotal = (items) => {
-  return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  return items.reduce((total, item) => total + item.price * item.quantity, 0);
+};
+
+// Chuẩn hóa dữ liệu cart từ MongoDB sang format GraphQL Cart
+const normalizeCart = (cartDoc) => {
+  if (!cartDoc) return null;
+
+  const cart = cartDoc.toObject();
+
+  const items = (cart.items || []).map((item) => ({
+    id: item._id.toString(),
+    productId: item.productId.toString(),
+    quantity: item.quantity,
+    price: item.price,
+  }));
+
+  const selectedItems = (cart.selectedItems || []).map((id) => id.toString());
+
+  return {
+    id: cart._id.toString(),
+    userId: cart.userId,
+    items,
+    selectedItems,
+    createdAt: cart.createdAt?.toISOString?.() || new Date().toISOString(),
+    updatedAt: cart.updatedAt?.toISOString?.() || new Date().toISOString(),
+  };
+};
+
+// Lấy cart từ DB, nếu chưa có thì tạo mới
+const getOrCreateCart = async (userId) => {
+  let cart = await Cart.findOne({ userId });
+  if (!cart) {
+    cart = await Cart.create({
+      userId,
+      items: [],
+      selectedItems: [],
+    });
+  }
+  return cart;
 };
 
 export const cartResolvers = {
   Query: {
-    getCart: (_, { userId }) => {
-      const cart = getCart(userId);
+    getCart: async (_, { userId }) => {
+      const cartDoc = await getOrCreateCart(userId);
+      const cart = normalizeCart(cartDoc);
+
       return {
         success: true,
         message: 'Cart retrieved successfully',
@@ -36,48 +61,69 @@ export const cartResolvers = {
       };
     },
 
-    getCartItem: (_, { userId, itemId }) => {
-      const cart = getCart(userId);
-      return cart.items.find(item => item.id === itemId);
+    getCartItem: async (_, { userId, itemId }) => {
+      const cartDoc = await getOrCreateCart(userId);
+      const cart = normalizeCart(cartDoc);
+      return cart.items.find((item) => item.id === itemId) || null;
     },
 
-    getSelectedItems: (_, { userId }) => {
-      const cart = getCart(userId);
-      return cart.items.filter(item => cart.selectedItems.includes(item.id));
+    getSelectedItems: async (_, { userId }) => {
+      const cartDoc = await getOrCreateCart(userId);
+      const cart = normalizeCart(cartDoc);
+      return cart.items.filter((item) => cart.selectedItems.includes(item.id));
     },
 
-    getCartTotal: (_, { userId }) => {
-      const cart = getCart(userId);
+    getCartTotal: async (_, { userId }) => {
+      const cartDoc = await getOrCreateCart(userId);
+      const cart = normalizeCart(cartDoc);
       return calculateTotal(cart.items);
     },
 
-    getSelectedTotal: (_, { userId }) => {
-      const cart = getCart(userId);
-      const selectedItems = cart.items.filter(item => cart.selectedItems.includes(item.id));
+    getSelectedTotal: async (_, { userId }) => {
+      const cartDoc = await getOrCreateCart(userId);
+      const cart = normalizeCart(cartDoc);
+      const selectedItems = cart.items.filter((item) =>
+        cart.selectedItems.includes(item.id)
+      );
       return calculateTotal(selectedItems);
     },
   },
 
   Mutation: {
-    addItemToCart: (_, { userId, input }) => {
-      const cart = getCart(userId);
+    // Khi người dùng thêm sản phẩm vào giỏ hàng -> lưu vào MongoDB (table cart)
+    addItemToCart: async (_, { userId, input }) => {
+      const cartDoc = await getOrCreateCart(userId);
 
-      const existingItem = cart.items.find(item => item.productId === input.productId);
+      // lấy thông tin sản phẩm để biết giá
+      const product = await Product.findById(input.productId);
+      if (!product) {
+        return {
+          success: false,
+          message: 'Product not found',
+          data: null,
+          error: `Product with ID ${input.productId} not found`,
+        };
+      }
+
+      const price = product.price || 0;
+
+      const existingItem = cartDoc.items.find(
+        (item) => item.productId.toString() === input.productId
+      );
 
       if (existingItem) {
         existingItem.quantity += input.quantity;
+        existingItem.price = price;
       } else {
-        const newItem = {
-          id: `item-${Date.now()}`,
+        cartDoc.items.push({
           productId: input.productId,
           quantity: input.quantity,
-          price: input.price || 0,
-        };
-        cart.items.push(newItem);
+          price,
+        });
       }
 
-      cart.updatedAt = new Date().toISOString();
-      carts.set(userId, cart);
+      await cartDoc.save();
+      const cart = normalizeCart(cartDoc);
 
       return {
         success: true,
@@ -89,9 +135,9 @@ export const cartResolvers = {
       };
     },
 
-    updateCartItem: (_, { userId, input }) => {
-      const cart = getCart(userId);
-      const item = cart.items.find(item => item.id === input.itemId);
+    updateCartItem: async (_, { userId, input }) => {
+      const cartDoc = await getOrCreateCart(userId);
+      const item = cartDoc.items.id(input.itemId);
 
       if (!item) {
         return {
@@ -112,8 +158,8 @@ export const cartResolvers = {
       }
 
       item.quantity = input.quantity;
-      cart.updatedAt = new Date().toISOString();
-      carts.set(userId, cart);
+      await cartDoc.save();
+      const cart = normalizeCart(cartDoc);
 
       return {
         success: true,
@@ -125,11 +171,19 @@ export const cartResolvers = {
       };
     },
 
-    removeFromCart: (_, { userId, itemId }) => {
-      const cart = getCart(userId);
-      const itemIndex = cart.items.findIndex(item => item.id === itemId);
+    removeFromCart: async (_, { userId, itemId }) => {
+      const cartDoc = await getOrCreateCart(userId);
 
-      if (itemIndex === -1) {
+      // Hỗ trợ xoá theo cả cartItemId (Mongo _id) hoặc productId
+      let item = cartDoc.items.id(itemId);
+
+      if (!item) {
+        item = cartDoc.items.find(
+          (it) => it.productId?.toString() === itemId
+        );
+      }
+
+      if (!item) {
         return {
           success: false,
           message: 'Item not found in cart',
@@ -138,10 +192,18 @@ export const cartResolvers = {
         };
       }
 
-      cart.items.splice(itemIndex, 1);
-      cart.selectedItems = cart.selectedItems.filter(id => id !== itemId);
-      cart.updatedAt = new Date().toISOString();
-      carts.set(userId, cart);
+      const cartItemId = item._id?.toString();
+
+      // Xoá item khỏi mảng
+      item.remove();
+
+      // Xoá khỏi danh sách selectedItems theo cả cartItemId và productId
+      cartDoc.selectedItems = cartDoc.selectedItems.filter(
+        (id) => id !== cartItemId && id !== itemId
+      );
+
+      await cartDoc.save();
+      const cart = normalizeCart(cartDoc);
 
       return {
         success: true,
@@ -153,9 +215,41 @@ export const cartResolvers = {
       };
     },
 
-    clearCart: (_, { userId }) => {
-      carts.delete(userId);
-      const cart = getCart(userId);
+    clearCart: async (_, { userId }) => {
+      let cartDoc = await Cart.findOne({ userId });
+
+      if (cartDoc) {
+        // Tăng buyerCount cho tất cả sản phẩm có trong giỏ trước khi xoá giỏ hàng
+        try {
+          const productIds = [
+            ...new Set(
+              (cartDoc.items || [])
+                .map((item) => item.productId)
+                .filter(Boolean)
+            ),
+          ];
+
+          console.log('[clearCart] userId =', userId, 'productIds =', productIds);
+
+          if (productIds.length > 0) {
+            const result = await Product.updateMany(
+              { _id: { $in: productIds } },
+              { $inc: { buyerCount: 1 } }
+            );
+            console.log('[clearCart] buyerCount updateMany result =', result);
+          }
+        } catch (e) {
+          console.error('Failed to update buyerCount on clearCart', e);
+        }
+
+        cartDoc.items = [];
+        cartDoc.selectedItems = [];
+        await cartDoc.save();
+      } else {
+        cartDoc = await getOrCreateCart(userId);
+      }
+
+      const cart = normalizeCart(cartDoc);
 
       return {
         success: true,
@@ -167,11 +261,12 @@ export const cartResolvers = {
       };
     },
 
-    selectItems: (_, { userId, input }) => {
-      const cart = getCart(userId);
-      cart.selectedItems = input.itemIds;
-      cart.updatedAt = new Date().toISOString();
-      carts.set(userId, cart);
+    selectItems: async (_, { userId, input }) => {
+      const cartDoc = await getOrCreateCart(userId);
+      cartDoc.selectedItems = input.itemIds || [];
+      await cartDoc.save();
+
+      const cart = normalizeCart(cartDoc);
 
       return {
         success: true,
@@ -183,11 +278,12 @@ export const cartResolvers = {
       };
     },
 
-    selectAllItems: (_, { userId }) => {
-      const cart = getCart(userId);
-      cart.selectedItems = cart.items.map(item => item.id);
-      cart.updatedAt = new Date().toISOString();
-      carts.set(userId, cart);
+    selectAllItems: async (_, { userId }) => {
+      const cartDoc = await getOrCreateCart(userId);
+      cartDoc.selectedItems = cartDoc.items.map((item) => item._id.toString());
+      await cartDoc.save();
+
+      const cart = normalizeCart(cartDoc);
 
       return {
         success: true,
@@ -199,11 +295,12 @@ export const cartResolvers = {
       };
     },
 
-    clearSelectedItems: (_, { userId }) => {
-      const cart = getCart(userId);
-      cart.selectedItems = [];
-      cart.updatedAt = new Date().toISOString();
-      carts.set(userId, cart);
+    clearSelectedItems: async (_, { userId }) => {
+      const cartDoc = await getOrCreateCart(userId);
+      cartDoc.selectedItems = [];
+      await cartDoc.save();
+
+      const cart = normalizeCart(cartDoc);
 
       return {
         success: true,
@@ -215,9 +312,11 @@ export const cartResolvers = {
       };
     },
 
-    checkout: (_, { userId }) => {
-      const cart = getCart(userId);
-      const selectedItems = cart.items.filter(item => 
+    checkout: async (_, { userId }) => {
+      const cartDoc = await getOrCreateCart(userId);
+      const cart = normalizeCart(cartDoc);
+
+      const selectedItems = cart.items.filter((item) =>
         cart.selectedItems.includes(item.id)
       );
 
@@ -231,20 +330,29 @@ export const cartResolvers = {
 
       const orderId = `order-${Date.now()}`;
       const total = calculateTotal(selectedItems);
-      const order = {
-        orderId,
-        userId,
-        items: selectedItems,
-        total,
-        status: 'completed',
-        createdAt: new Date().toISOString(),
-      };
-      orders.push(order);
 
-      cart.items = cart.items.filter(item => !cart.selectedItems.includes(item.id));
-      cart.selectedItems = [];
-      cart.updatedAt = new Date().toISOString();
-      carts.set(userId, cart);
+      // tăng bộ đếm số khách mua cho các sản phẩm tương ứng
+      try {
+        const productIds = [
+          ...new Set(selectedItems.map((item) => item.productId)),
+        ].map((id) => new mongoose.Types.ObjectId(id));
+
+        if (productIds.length > 0) {
+          await Product.updateMany(
+            { _id: { $in: productIds } },
+            { $inc: { buyerCount: 1 } }
+          );
+        }
+      } catch (e) {
+        console.error('Failed to update buyerCount', e);
+      }
+
+      // Sau khi checkout thì xóa các item đã chọn khỏi giỏ hàng
+      cartDoc.items = cartDoc.items.filter(
+        (item) => !cart.selectedItems.includes(item._id.toString())
+      );
+      cartDoc.selectedItems = [];
+      await cartDoc.save();
 
       return {
         success: true,

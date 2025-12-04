@@ -11,6 +11,8 @@ const productSchema = new mongoose.Schema({
   rating: { type: Number, default: 0, min: 0, max: 5 }, // đánh giá
   stock: { type: Number, default: 0 }, // số lượng tồn kho
   tags: [String], // tags tìm kiếm
+  buyerCount: { type: Number, default: 0 }, // số khách đã mua
+  commentCount: { type: Number, default: 0 }, // số bình luận
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -22,6 +24,8 @@ productSchema.index({ price: 1 });
 productSchema.index({ discount: 1 });
 productSchema.index({ views: 1 });
 productSchema.index({ rating: 1 });
+productSchema.index({ buyerCount: -1 });
+productSchema.index({ commentCount: -1 });
 
 const Product = mongoose.model('product', productSchema);
 

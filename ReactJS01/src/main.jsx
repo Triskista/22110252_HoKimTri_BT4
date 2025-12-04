@@ -15,6 +15,7 @@ import LoginPage from './pages/login.jsx';
 import ForgotPassword from './pages/forgotPassword.jsx';
 import ResetPassword from './pages/resetPassword.jsx';
 import ProductsPage from './pages/products.jsx';
+import ProductDetailPage from './pages/productDetail.jsx';
 import AdminPage from './pages/admin.jsx';
 import { AuthWrapper } from './components/context/auth.context.jsx';
 
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
       {
         path: 'products',
         element: <ProductsPage />
+      },
+      {
+        path: 'products/:id',
+        element: <ProductDetailPage />
       },
       {
         path: 'admin',

@@ -1,4 +1,4 @@
-const { getProducts, createProduct, updateProduct, deleteProduct } = require('../services/productService');
+const { getProducts, getProductById, createProduct, updateProduct, deleteProduct } = require('../services/productService');
 const { advancedSearch, filterProducts, getCategories, getPriceStats } = require('../services/searchService');
 
 const getProductsController = async (req, res) => {
@@ -101,6 +101,12 @@ const deleteProductController = async (req, res) => {
   return res.status(200).json(data);
 }
 
+const getProductDetailController = async (req, res) => {
+  const { id } = req.params;
+  const data = await getProductById(id);
+  return res.status(200).json(data);
+};
+
 module.exports = { 
   getProductsController, 
   createProductController, 
@@ -109,5 +115,6 @@ module.exports = {
   searchProductsController,
   filterProductsController,
   getCategoriesController,
-  getPriceStatsController
+  getPriceStatsController,
+  getProductDetailController,
 };

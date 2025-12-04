@@ -20,6 +20,17 @@ const getProducts = async ({ page = 1, limit = 10, category }) => {
   }
 }
 
+const getProductById = async (id) => {
+  try {
+    const product = await Product.findById(id);
+    if (!product) return { EC: 1, EM: 'Sản phẩm không tồn tại' };
+    return { EC: 0, EM: 'OK', data: product };
+  } catch (error) {
+    console.log(error);
+    return { EC: 1, EM: 'Lỗi hệ thống' };
+  }
+};
+
 const createProduct = async (title, description, price, category, image, discount = 0, tags = []) => {
   try {
     const product = await Product.create({ title, description, price, category, image, discount, tags });
@@ -71,7 +82,7 @@ const seedProducts = async () => {
 
     const categories = ['electronics', 'clothes', 'beauty', 'books'];
     const samples = [];
-    for (let i = 1; i <= 150; i++) {
+    for (let i = 1; i <= 20; i++) {
       samples.push({
         title: `Sample product ${i}`,
         description: `Description for product ${i}`,
@@ -92,4 +103,4 @@ const seedProducts = async () => {
   }
 }
 
-module.exports = { getProducts, seedProducts, createProduct, updateProduct, deleteProduct };
+module.exports = { getProducts, getProductById, seedProducts, createProduct, updateProduct, deleteProduct };

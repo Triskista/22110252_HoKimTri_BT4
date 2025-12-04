@@ -2,12 +2,18 @@ const express = require('express');
 const { createUser, handleLogin, getUser,
   getAccount, forgotPassword, resetPasswordController
 } = require('../controllers/userController');
-const { getProductsController, createProductController, updateProductController, deleteProductController, searchProductsController, filterProductsController, getCategoriesController, getPriceStatsController } = require('../controllers/productController');
+const { getProductsController, createProductController, updateProductController, deleteProductController, searchProductsController, filterProductsController, getCategoriesController, getPriceStatsController, getProductDetailController } = require('../controllers/productController');
 const auth = require('../middleware/auth');
 const delay = require('../middleware/delay');
 const createRateLimiter = require('../middleware/rateLimiter');
 const authorize = require('../middleware/authorize');
 const { body, validationResult } = require('express-validator');
+const {
+  toggleFavoriteController,
+  getFavoritesController,
+  addCommentController,
+  getCommentsController,
+} = require('../controllers/socialController');
 
 const routerAPI = express.Router();
 
@@ -45,6 +51,8 @@ routerAPI.get("/", (req, res) => {
 
 // public product listing with pagination / lazy-load support
 routerAPI.get('/products', getProductsController);
+// public product detail
+routerAPI.get('/products/:id', getProductDetailController);
 
 // advanced search and filter endpoints
 routerAPI.get('/search', searchProductsController);
@@ -57,6 +65,14 @@ routerAPI.use(auth);
 
 routerAPI.get("/user", getUser);
 routerAPI.get("/account", delay, getAccount);
+
+// favorites
+routerAPI.post('/favorites/:productId', toggleFavoriteController);
+routerAPI.get('/favorites', getFavoritesController);
+
+// comments
+routerAPI.post('/products/:productId/comments', addCommentController);
+routerAPI.get('/products/:productId/comments', getCommentsController);
 
 // admin-only product management endpoints
 routerAPI.post('/products', 
